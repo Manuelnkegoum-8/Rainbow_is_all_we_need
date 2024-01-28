@@ -54,27 +54,26 @@ class CatAgent:
         batch_size = states.size(0)
         delta_z = (self.v_max - self.v_min) / (self.atom_size - 1)
         support = self.target_net.support
-        with torch.no_grad():
-            next_action = self.target_net(new_states).argmax(dim=1)
-            next_dist = self.target_net.distribution(new_states)
-            next_dist = next_dist[range(batch_size), next_action]
-            targets = rewards + (1 - dones) * self.gamma * support
-            targets = targets.clamp(min=self.v_min, max=self.v_max)
-            b = ((targets - self.v_min) / delta_z).float()
-            l = b.floor().long()
-            u = b.ceil().long()
-            offset = (
+        next_action = self.target_net(new_states).argmax(dim=1)
+        next_dist = self.target_net.distribution(new_states)
+        next_dist = next_dist[range(batch_size), next_action]
+        targets = rewards + (1 - dones) * self.gamma * support
+        targets = targets.clamp(min=self.v_min, max=self.v_max)
+        b = ((targets - self.v_min) / delta_z).float()
+        l = b.floor().long()
+        u = b.ceil().long()
+        offset = (
                     torch.linspace(
                         0, (batch_size - 1) * self.atom_size, batch_size
                     ).long()
                     .unsqueeze(1)
                     .expand(batch_size, self.atom_size)
                 )
-            proj_dist = torch.zeros(next_dist.size())
-            proj_dist.view(-1).index_add_(
+        proj_dist = torch.zeros(next_dist.size())
+        proj_dist.view(-1).index_add_(
                     0, (l + offset).view(-1), (next_dist * (u.float() - b)).view(-1)
                 )
-            proj_dist.view(-1).index_add_(
+        proj_dist.view(-1).index_add_(
                     0, (u + offset).view(-1), (next_dist * (b - l.float())).view(-1)
                 )
         dist = self.policy_net.distribution(states)
