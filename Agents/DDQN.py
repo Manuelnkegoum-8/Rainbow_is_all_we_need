@@ -59,7 +59,7 @@ class ClassicAgent:
     def select_action(self,state):
         self.policy_net.eval()
         with torch.no_grad():
-            q_values = agent.policy_net(torch.Tensor(state).unsqueeze(0))
+            q_values = self.policy_net(torch.Tensor(state).unsqueeze(0))
             acts = torch.argmax(q_values,dim=1)[0]
             action =  acts.detach().cpu().item()
         self.policy_net.train()
