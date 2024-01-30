@@ -20,18 +20,11 @@ class BaseNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden,atom_size*env.action_space.n)
             )
-    def distribution(self,x):
+    def forward(self,x):
         feat = self.net(x)
         q = feat.view(-1,self.out_dim,self.atom_size)
         dist = F.softmax(q,dim=-1)
-        dist = dist.clamp(min=1e-3)  # for avoiding nans
         return dist
-
-    def forward(self,x):
-        # X is a state/observation
-        feat = self.distribution(x)
-        q = torch.sum(feat * self.support, dim=2)
-        return q #shape(bs,num_actions)
 
 
 class CatAgent:
@@ -53,11 +46,11 @@ class CatAgent:
         """
         batch_size = states.size(0)
         delta_z = (self.v_max - self.v_min) / (self.atom_size - 1)
-        support = self.target_net.support
-        next_action = self.target_net(new_states).argmax(dim=1)
-        next_dist = self.target_net.distribution(new_states)
-        next_dist = next_dist[range(batch_size), next_action]
-        targets = rewards + (1 - dones) * self.gamma * support
+        next_dist = self.target_net(new_states)
+        next_action = torch.sum(next_dist * self.support, dim=2).argmax(dim=1)
+        next_action = next_action.unsqueeze(1).unsqueeze(1).expand(next_dist.size(0), 1, next_dist.size(2))
+        next_dist   = next_dist.gather(1, next_action).squeeze(1)
+        targets = rewards + (1 - dones) * (self.gamma**self.n_steps) * self.support
         targets = targets.clamp(min=self.v_min, max=self.v_max)
         b = ((targets - self.v_min) / delta_z).float()
         l = b.floor().long()
@@ -76,8 +69,11 @@ class CatAgent:
         proj_dist.view(-1).index_add_(
                     0, (u + offset).view(-1), (next_dist * (b - l.float())).view(-1)
                 )
-        dist = self.policy_net.distribution(states)
-        log_p = torch.log(dist[range(batch_size), actions])
+        dist = self.policy_net(states)
+        actions = actions.unsqueeze(1).expand(batch_size, 1, self.atom_size)
+        dist = dist.gather(1, actions).squeeze(1)
+        dist.data.clamp_(0.01, 0.99)
+        log_p = dist.log()
         loss = -(proj_dist * log_p).sum(1)
         return loss.mean()
 
@@ -91,3 +87,12 @@ class CatAgent:
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
         self.target_net.load_state_dict(target_net_state_dict)
+
+    def select_action(self,state):
+        self.policy_net.eval()
+        with torch.no_grad():
+            q_values = self.policy_net(torch.Tensor(state).unsqueeze(0))
+            acts = torch.sum(q_values * self.support, dim=2).argmax(dim=1)[0]
+            action =  acts.detach().cpu().item()
+        self.policy_net.train()
+        return action
