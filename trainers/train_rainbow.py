@@ -25,7 +25,9 @@ def optimize(agent, replay_buffer, optimizer, batch_size, device, n_steps, gamma
         return False
     batchs, info_buffer = replay_buffer.n_step_sample(batch_size, n_steps, gamma)
     indices = info_buffer['index']
-    
+    weights = torch.FloatTensor(
+                info_buffer["_weight"].reshape(-1, 1)
+            ).to(device)
     new_states = batchs.next_state.float().to(device)
     states = batchs.state.float().to(device)
     actions = batchs.action.long().unsqueeze(-1).to(device)
@@ -33,7 +35,7 @@ def optimize(agent, replay_buffer, optimizer, batch_size, device, n_steps, gamma
     dones = batchs.done.float().unsqueeze(-1).to(device)
     
     elementwise_loss = agent.compute_loss(states, actions, new_states, rewards, dones)
-    loss = torch.mean(elementwise_loss)
+    loss = torch.mean(elementwise_loss*weights)
     loss_for_prior = elementwise_loss.detach().cpu().numpy()
     new_priorities = loss_for_prior
     replay_buffer.update_priority(indices, new_priorities)
