@@ -22,7 +22,7 @@ class AtariNet(nn.Module):
         )
 
     def forward(self,x):
-        x = self.convnet(x)
+        x = self.convnet(x/255.)
         return x
 
 
@@ -80,20 +80,26 @@ class RainbowAgent:
         self.policy_net = BaseNetwork(env,hidden,atom_size,v_min,v_max,atari,device).to(device)
         self.target_net = BaseNetwork(env,hidden,atom_size,v_min,v_max,atari,device).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
+
+        for param in self.target_net.parameters():
+            param.requires_grad = False
+
         self.gamma = gamma
         self.tau = tau
         self.support = torch.linspace(self.v_min, self.v_max, self.atom_size).to(device)
         self.n_steps = n_steps
-        
+
     def compute_loss(self,states,actions,new_states,rewards,dones):
         batch_size = states.size(0)
         delta_z = (self.v_max - self.v_min) / (self.atom_size - 1)
         support = self.support.to(self.device)
         with torch.no_grad():
-            next_dist = self.target_net(new_states)
+            next_dist = self.policy_net(new_states)
             next_action = torch.sum(next_dist * support, dim=2).argmax(dim=1)
             next_action = next_action.unsqueeze(1).unsqueeze(1).expand(next_dist.size(0), 1, next_dist.size(2))
-            next_dist   = next_dist.gather(1, next_action).squeeze(1)
+            
+            target_dist = self.target_net(new_states)
+            next_dist   = target_dist.gather(1, next_action).squeeze(1)
             targets = rewards + (1 - dones) * (self.gamma**self.n_steps) * self.support
             targets = targets.clamp(min=self.v_min, max=self.v_max)
             b = ((targets - self.v_min) / delta_z).float()

@@ -1,10 +1,38 @@
 import gymnasium as gym
-from gym import spaces
+from gymnasium import spaces
 import cv2
 import numpy as np
 from collections import deque
 # from: https://github.com/openai/baselines/baselines/common/atari_wrappers.py
-# from: https://github.com/Officium/RL-Experiments/blob/master/src/common/wrappers.py 
+
+
+class TimeLimit(gym.Wrapper):
+    def __init__(self, env, max_episode_steps=None):
+        super(TimeLimit, self).__init__(env)
+        self._max_episode_steps = max_episode_steps
+        self._elapsed_steps = 0
+
+    def step(self, ac):
+        observation, reward, terminated,truncated, info = self.env.step(ac)
+        self._elapsed_steps += 1
+        if self._elapsed_steps >= self._max_episode_steps:
+            truncated = True
+            info['TimeLimit.truncated'] = True
+        return observation, reward,terminated, truncated, info
+
+    def reset(self, **kwargs):
+        self._elapsed_steps = 0
+        return self.env.reset(**kwargs)
+
+class ClipActionsWrapper(gym.Wrapper):
+    def step(self, action):
+        import numpy as np
+        action = np.nan_to_num(action)
+        action = np.clip(action, self.action_space.low, self.action_space.high)
+        return self.env.step(action)
+
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
 
 class NoopResetEnv(gym.Wrapper):
     def __init__(self, env, noop_max=30):
@@ -23,7 +51,7 @@ class NoopResetEnv(gym.Wrapper):
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
-            noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)
+            noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)
         assert noops > 0
         obs = None
         for _ in range(noops):
@@ -181,12 +209,12 @@ class FrameStack(gym.Wrapper):
         ob,_ = self.env.reset()
         for _ in range(self.k):
             self.frames.append(ob)
-        return np.asarray(self._get_ob()),None
+        return self._get_ob(),None
 
     def step(self, action):
         ob, reward,  terminated, truncated , info = self.env.step(action)
         self.frames.append(ob)
-        return np.asarray(self._get_ob()), reward,  terminated, truncated , info
+        return self._get_ob(), reward,  terminated, truncated , info
 
     def _get_ob(self):
         assert len(self.frames) == self.k
@@ -232,7 +260,16 @@ class ScaledFloatFrame(gym.ObservationWrapper):
         # careful! This undoes the memory optimization, use
         # with smaller replay buffers only.
         return np.array(observation).astype(np.float32) / 255.0
-    
+
+
+def make_atari(env_id,render_mode,max_episode_steps=None):
+    env = gym.make(env_id,render_mode=render_mode)
+    assert 'NoFrameskip' in env.spec.id
+    env = NoopResetEnv(env, noop_max=30)
+    env = MaxAndSkipEnv(env, skip=4)
+    if max_episode_steps is not None:
+        env = TimeLimit(env, max_episode_steps=max_episode_steps)
+    return env
     
 def wrap_deepmind(env, episode_life=True, clip_rewards=True, frame_stack=False, scale=False):
     """Configure environment for DeepMind-style Atari.
@@ -242,7 +279,6 @@ def wrap_deepmind(env, episode_life=True, clip_rewards=True, frame_stack=False, 
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
     env = WarpFrame(env, width=84, height=84)
-    env = MaxAndSkipEnv(env, skip=4)
     if scale:
         env = ScaledFloatFrame(env)
     if clip_rewards:

@@ -1,16 +1,14 @@
 from torchrl.data import PrioritizedReplayBuffer,ListStorage
 from collections import namedtuple, deque
 import random,math,torch
-
+import numpy as np
 class MyPrioritizedReplayBuffer(PrioritizedReplayBuffer):
     """
     To updtae the value of beta during training we need to subclass the 
     PrioritizedREplayBuffer class and add a update beta method
     """
-    """def __init__(self, n_steps,gamma, *args, **kwargs):
-        super(MyPrioritizedReplayBuffer, self).__init__(*args, **kwargs)
-        self.n_steps = n_steps
-        self.gamma = gamma"""
+    """def __init__(self,*args, **kwargs):
+        super(MyPrioritizedReplayBuffer, self).__init__(*args, **kwargs)"""
 
     def update_beta(self, new_beta):
         self._sampler._beta = new_beta
@@ -27,11 +25,11 @@ class MyPrioritizedReplayBuffer(PrioritizedReplayBuffer):
                     # compute the n-th reward
                     sum_reward += (gamma**n) * self[i+n].reward
                     if self[i+n].done:
-                        states_look_ahead = torch.tensor(self[i+n].next_state).float()
+                        states_look_ahead = torch.tensor(np.array(self[i+n].next_state)).float()
                         done_look_ahead = True
                         break
                     else:
-                        states_look_ahead = torch.tensor(self[i+n].next_state).float()
+                        states_look_ahead = torch.tensor(np.array(self[i+n].next_state)).float()
                         done_look_ahead = False
             batchs.reward[j] = sum_reward
             batchs.next_state[j] = states_look_ahead
