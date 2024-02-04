@@ -8,7 +8,7 @@
 ## Description
 This project implements the Rainbow Deep Reinforcement Learning (DRL) algorithm, a state-of-the-art technique that combines several advancements in the field of reinforcement learning to achieve superior performance in a wide range of environments. Rainbow integrates multiple key innovations, including Double Q-learning, prioritized experience replay, dueling network architectures, multi-step learning, distributional reinforcement learning, and noisy nets, into a single, cohesive agent.
 
-## Installation
+## Getting started 🚀
 
 To get started with this project, follow these steps to install the necessary dependencies. It is recommended to use a virtual environment to manage dependencies separately from your system's Python installation.
 
@@ -41,25 +41,30 @@ To get started with this project, follow these steps to install the necessary de
     pip install -r requirements.txt
     ```
 
-## Usage
+4. **Usage**
 
-To run the training module with custom configurations, use the following command format. This example sets the game to "SpaceInvadersNoFrameskip-v4," the number of steps to 5 million, and the memory capacity to 100,000.
+    - To run the training module with custom configurations, use the following command format. This example sets the game to "SpaceInvadersNoFrameskip-v4," the number of steps to 5 million, and the memory capacity to 100,000.
 
 ```
 python -m trainers.trainer --game SpaceInvadersNoFrameskip-v4 --steps 5e6 --memory_capacity 1e5
 ```
 
-## Results
+## Results 📊
 
 
-## Acknowledgements
+## Acknowledgements  🙏 
 
 - Thanks to the creators of the Rainbow algorithm and all the researchers whose work contributed to this powerful approach to deep reinforcement learning.
 - Special thanks to [OpenAI](https://openai.com/) for providing the baseline wrappers for Atari environments, which significantly simplify the process of preprocessing and setting up these environments for training.
 - This project uses [OpenAI Gym](https://gym.openai.com/) for the environment simulations.
 
+## Authors  🧑‍💻
+- Victor Hoffmann 
+- Manuel Nkegoum
 
-## References
+
+
+## References 📄 
 [1] [Rainbow: Combining Improvements in Deep Reinforcement Learning](https://arxiv.org/abs/1710.02298)  
 [2] [Distributional Reinforcement Learning with Quantile Regression](https://arxiv.org/abs/1710.10044)  
 [3] [Playing Atari with Deep Reinforcement Learning](http://arxiv.org/abs/1312.5602)  
@@ -68,4 +73,4 @@ python -m trainers.trainer --game SpaceInvadersNoFrameskip-v4 --steps 5e6 --memo
 [6] [Dueling Network Architectures for Deep Reinforcement Learning](http://arxiv.org/abs/1511.06581)  
 [7] [Reinforcement Learning: An Introduction](http://www.incompleteideas.net/sutton/book/ebook/the-book.html)  
 [8] [A Distributional Perspective on Reinforcement Learning](https://arxiv.org/abs/1707.06887)  
-[9] [Noisy Networks for Exploration](https://arxiv.org/abs/1706.10295)  
+[9] [Noisy Networks for Exploration](https://arxiv.org/abs/1706.10295)
