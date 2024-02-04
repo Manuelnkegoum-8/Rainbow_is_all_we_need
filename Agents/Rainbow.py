@@ -4,7 +4,7 @@ import torch.nn.init as init
 import numpy as np
 import random,math
 import torch.nn.functional as F
-from Noisy import NoisyLayer
+from .Noisy import NoisyLayer
 
 class AtariNet(nn.Module):
     def __init__(self,env,features = 128):
