@@ -1,4 +1,4 @@
-# RAINBOW IS ALL WE NEED
+# RAINBOW IS ALL WE NEED 🌈
 [![gymnasium version](https://img.shields.io/badge/gymnasium-0.29.1-blue.svg)](https://pypi.org/project/gymnasium/0.29.1/)
 [![numpy version](https://img.shields.io/badge/numpy-1.26.3-red.svg)](https://pypi.org/project/numpy/1.26.3/)
 [![opencv-python version](https://img.shields.io/badge/opencv--python-4.9.0.80-green.svg)](https://pypi.org/project/opencv-python/4.9.0.80/)
