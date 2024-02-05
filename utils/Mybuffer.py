@@ -1,20 +1,11 @@
-from torchrl.data import PrioritizedReplayBuffer,ListStorage
+#from torchrl.data import PrioritizedReplayBuffer,ListStorage
+from PrioritizedReplaybuffer import PrioritizedReplayBuffer
 from collections import namedtuple, deque
 import random,math,torch
 import numpy as np
 class MyPrioritizedReplayBuffer(PrioritizedReplayBuffer):
-    """
-    To updtae the value of beta during training we need to subclass the 
-    PrioritizedREplayBuffer class and add a update beta method
-    """
-    """def __init__(self,*args, **kwargs):
-        super(MyPrioritizedReplayBuffer, self).__init__(*args, **kwargs)"""
-
-    def update_beta(self, new_beta):
-        self._sampler._beta = new_beta
-    
-    def n_step_sample(self,batch_size,n_steps,gamma):
-        batchs,info_buffer = self.sample(batch_size,return_info=True) # sample random transitions in replay buffer
+    def n_step_sample(self,batch_size,n_steps,gamma,beta):
+        batchs,info_buffer = self.sample(batch_size,beta) # sample random transitions in replay buffer
         indices = info_buffer['index']
         for j,i in enumerate(indices):
             sum_reward = 0

@@ -1,38 +1,6 @@
 import numpy as np
 import torch
 
-class CustomBatch:
-    def __init__(self, states, actions, rewards,next_states, dones):
-        self.state = states
-        self.next_state = next_states
-        self.action = actions
-        self.reward = rewards
-        self.done = dones
-
-def custom_collate_fn(batch):
-    states = []
-    next_states = []
-    actions = []
-    rewards = []
-    dones = []
-
-    for item in batch:
-        state, action, reward,next_state, done = item
-        states.append(torch.tensor(np.array(state), dtype=torch.float32))
-        next_states.append(torch.tensor(np.array(next_state), dtype=torch.float32))
-        actions.append(torch.tensor(action, dtype=torch.int64))
-        rewards.append(torch.tensor(reward, dtype=torch.float32))
-        dones.append(torch.tensor(done, dtype=torch.float32))
-
-    # Stack all lists to create batched tensors
-    batched_states = torch.stack(states)
-    batched_next_states = torch.stack(next_states)
-    batched_actions = torch.stack(actions)
-    batched_rewards = torch.stack(rewards)
-    batched_dones = torch.stack(dones)
-    return CustomBatch(batched_states,batched_actions, batched_rewards,batched_next_states, batched_dones)
-
-
 def optimize(agent,replay_buffer,optimizer,batch_size,n_steps,gamma,device):
 
     batchs,info_buffer = replay_buffer.n_step_sample(batch_size,n_steps,gamma) # sample random transitions in replay buffer

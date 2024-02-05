@@ -137,9 +137,15 @@ class RainbowAgent:
     def select_action(self,state):
         self.policy_net.eval()
         with torch.no_grad():
-            state = torch.Tensor(state).unsqueeze(0).to(self.device)
-            q_values = self.policy_net(state)
-            acts = torch.sum(q_values * self.support, dim=2).argmax(dim=1)[0]
-            action =  acts.detach().cpu().item()
+            if len(state.shape)>3 :
+                state = torch.Tensor(state).to(self.device) # for vectorized envs
+                q_values = self.policy_net(state)
+                acts = torch.sum(q_values * self.support, dim=2).argmax(dim=1)
+                action =  acts.detach().cpu().numpy()
+            else:
+                state = torch.Tensor(state).unsqueeze(0).to(self.device)
+                q_values = self.policy_net(state)
+                acts = torch.sum(q_values * self.support, dim=2).argmax(dim=1)[0]
+                action =  acts.detach().cpu().item()
         self.policy_net.train()
         return action
