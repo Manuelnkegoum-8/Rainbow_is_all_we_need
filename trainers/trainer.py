@@ -2,7 +2,7 @@ import torch
 import argparse
 from colorama import Fore, Style
 from utils.wrapper import wrap_deepmind,make_atari
-from .helpers import optimize
+from .helpers import optimize2
 from tqdm import tqdm
 from collections import namedtuple,deque
 import numpy as np
@@ -10,10 +10,10 @@ from torchrl.data import ListStorage
 import random,math,time
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
-from utils.Mybuffer import MyPrioritizedReplayBuffer
+from utils.PrioritizedReplaybuffer import PrioritizedReplayBuffer
 import gymnasium as gym
 from Agents.Rainbow import RainbowAgent
-
+from Agents.Rainbow2 import RainbowAgent2
 rainbow_colors = [Fore.RED, Fore.YELLOW, Fore.GREEN, Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
 
 def printf(text='='*80):
@@ -33,18 +33,18 @@ parser.add_argument('--hidden_size', type=int, default=512, metavar='SIZE', help
 parser.add_argument('--atoms', type=int, default=51, metavar='C', help='Discretised size of value distribution')
 parser.add_argument('--V_min', type=float, default=-10, metavar='V', help='Minimum of value distribution support')
 parser.add_argument('--V_max', type=float, default=10, metavar='V', help='Maximum of value distribution support')
-parser.add_argument('--memory_capacity', type=int, default=int(1e6), metavar='CAPACITY', help='Experience replay memory capacity')
+parser.add_argument('--memory_capacity', type=int, default=int(1e5), metavar='CAPACITY', help='Experience replay memory capacity')
 parser.add_argument('--train_frequency', type=int, default=4, metavar='k', help='Frequency of sampling from memory')
 parser.add_argument('--priority_exponent', type=float, default=0.5, metavar='ω', help='Prioritised experience replay exponent (originally denoted α)')
 parser.add_argument('--priority_weight', type=float, default=0.4, metavar='β', help='Initial prioritised experience replay importance sampling weight')
 parser.add_argument('--multi_step', type=int, default=3, metavar='n', help='Number of steps for multi-step return')
 parser.add_argument('--discount', type=float, default=0.99, metavar='γ', help='Discount factor')
-parser.add_argument('--target_update', type=int, default=int(32e3), metavar='τ', help='Number of steps after which to update target network')
+parser.add_argument('--target_update', type=int, default=int(8e3), metavar='τ', help='Number of steps after which to update target network')
 parser.add_argument('--reward_clip', type=bool, default=True, metavar='VALUE', help='Reward clipping (0 to disable)')
 parser.add_argument('--lr', type=float, default=0.0000625, metavar='η', help='Learning rate')
 parser.add_argument('--adam_eps', type=float, default=1.5e-4, metavar='ε', help='Adam epsilon')
 parser.add_argument('--batch_size', type=int, default=32, metavar='SIZE', help='Batch size')
-parser.add_argument('--min_samples', type=int, default=int(80e3), metavar='STEPS', help='Number of steps before starting training')
+parser.add_argument('--min_samples', type=int, default=int(2e4), metavar='STEPS', help='Number of steps before starting training')
 parser.add_argument('--evaluation_episodes', type=int, default=10, metavar='N', help='Number of evaluation episodes to average over')
 
 args = parser.parse_args()
@@ -101,7 +101,7 @@ def train(agent,optimizer,env,buffer,batch_size,beta,n_steps,gamma,device):
             beta_ = min(1.0,beta + (1.0 - beta) * (steps_done / Max_steps_done))
             if steps_done%train_freq==0:
                 boolean = optimize(agent,buffer,optimizer,batch_size,n_steps,gamma,beta_,device)
-                torch.save(agent.policy_net.state_dict(),'weights/policy.pt')
+                torch.save(agent.policy_net.state_dict(),'policy.pt')
             if steps_done%target_freq==0:
                 agent.update()
             
@@ -145,15 +145,16 @@ if __name__=='__main__':
     atari = True
     device = args.device
     agent = RainbowAgent(env,hidden,gamma,TAU,vmin,vmax,atom_size,n_steps,atari,device)
-
-    replay_buffer = MyPrioritizedReplayBuffer(alpha=alpha,
+    #agent = RainbowAgent2(env,hidden,gamma,TAU,n_steps,atari,device)
+    replay_buffer = PrioritizedReplayBuffer(alpha=alpha,
                                                size=args.memory_capacity,
-                                               eps=prior_eps)
+                                               eps=prior_eps,
+                                               n_steps=n_steps,
+                                               gamma=gamma)
     optimizer = torch.optim.Adam(agent.policy_net.parameters(),
                                  lr=args.lr,
                                  eps=args.adam_eps)
 
-    torch.autograd.set_detect_anomaly(True)
     
     printf()
     print("[INFO] Training started for Rainbow 🌈 (see logs for details)")
@@ -169,3 +170,4 @@ if __name__=='__main__':
     printf()
     print("[INFO] DONE")
     print(Style.RESET_ALL)
+

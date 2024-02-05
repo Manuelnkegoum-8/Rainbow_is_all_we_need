@@ -2,8 +2,9 @@ import numpy as np
 import random
 import operator
 import torch
-from collections import deque
-
+from collections import deque,namedtuple
+Transition = namedtuple('Transition',
+                        ('state', 'action',  'reward','next_state','done'))
 class CustomBatch:
     def __init__(self, states, actions, rewards,next_states, dones):
         self.state = states
@@ -13,26 +14,17 @@ class CustomBatch:
         self.done = dones
 
 def custom_collate_fn(storage,idxes):
-    states = []
-    next_states = []
-    actions = []
-    rewards = []
-    dones = []
+    transitions = [storage[idx] for idx in idxes]
 
-    for idx in idxes:
-        state, action, reward,next_state, done = storage[idx]
-        states.append(torch.tensor(np.array(state, copy=False), dtype=torch.float32))
-        next_states.append(torch.tensor(np.array(next_state, copy=False), dtype=torch.float32))
-        actions.append(torch.tensor(action, dtype=torch.int64))
-        rewards.append(torch.tensor(reward, dtype=torch.float32))
-        dones.append(torch.tensor(done, dtype=torch.float32))
+    # Utiliser zip(*) pour "dézipper" les transitions en listes homogènes
+    states, actions, rewards, next_states, dones = zip(*transitions)
 
-    # Stack all lists to create batched tensors
-    batched_states = torch.stack(states)
-    batched_next_states = torch.stack(next_states)
-    batched_actions = torch.stack(actions)
-    batched_rewards = torch.stack(rewards)
-    batched_dones = torch.stack(dones)
+    # Conversion directe des listes en tenseurs PyTorch
+    batched_states = torch.tensor(np.array(states), dtype=torch.float32)
+    batched_actions = torch.tensor(actions, dtype=torch.int64)
+    batched_rewards = torch.tensor(rewards, dtype=torch.float32)
+    batched_next_states = torch.tensor(np.array(next_states), dtype=torch.float32)
+    batched_dones = torch.tensor(dones, dtype=torch.float32)
     return CustomBatch(batched_states,batched_actions, batched_rewards,batched_next_states, batched_dones)
 
 class SegmentTree(object):
@@ -179,7 +171,7 @@ class MinSegmentTree(SegmentTree):
         return super(MinSegmentTree, self).reduce(start, end)
 
 class ReplayBuffer(object):
-    def __init__(self, size):
+    def __init__(self, size,n_steps=1,gamma=0.99):
         """Create Replay buffer.
 
         Parameters
@@ -190,20 +182,44 @@ class ReplayBuffer(object):
         """
         self._storage = deque([],maxlen=size)
         self._maxsize = size
+        self.n_steps = n_steps
         self._next_idx = 0
+        self.gamma = gamma
+        self.n_step_buffer = deque([],maxlen=n_steps)
 
     def __len__(self):
         return len(self._storage)
 
     def __getitem__(self,idx):
         return self._storage[idx]
-    def add(self, data):
 
-        if self._next_idx >= len(self._storage):
-            self._storage.append(data)
-        else:
-            self._storage[self._next_idx] = data
+        
+    def add(self, transition):
+        obs, act, rew, next_obs, done = transition
+        self.n_step_buffer.append(transition)
+        # single step transition is not ready
+        if len(self.n_step_buffer) < self.n_steps:
+            return ()
+        
+        # make a n-step transition
+        rew, next_obs, done = self._get_n_step_info(
+            self.n_step_buffer, self.gamma
+        )
+        obs, act = self.n_step_buffer[0][:2]
+        self._storage.append(Transition(obs,act,rew,next_obs,done))
         self._next_idx = (self._next_idx + 1) % self._maxsize
+
+    def _get_n_step_info(self, n_step_buffer, gamma):
+        """Return n step rew, next_obs, and done."""
+        # info of the last transition
+        rew, next_obs, done = n_step_buffer[-1][-3:]
+        for transition in reversed(list(n_step_buffer)[:-1]):
+            r, n_o, d = transition[-3:]
+
+            rew = r + gamma * rew * (1 - d)
+            next_obs, done = (n_o, d) if d else (next_obs, done)
+
+        return rew, next_obs, done
 
     def _encode_sample(self, idxes):
         return custom_collate_fn(self._storage,idxes)
@@ -235,7 +251,7 @@ class ReplayBuffer(object):
 
 
 class PrioritizedReplayBuffer(ReplayBuffer):
-    def __init__(self, size, alpha,eps):
+    def __init__(self, size, alpha,eps,gamma,n_steps):
         """Create Prioritized Replay buffer.
 
         Parameters
@@ -251,7 +267,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         --------
         ReplayBuffer.__init__
         """
-        super(PrioritizedReplayBuffer, self).__init__(size)
+        super(PrioritizedReplayBuffer, self).__init__(size,n_steps,gamma)
         assert alpha >= 0
         self._alpha = alpha
         self._eps = eps
