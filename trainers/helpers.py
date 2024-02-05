@@ -1,12 +1,13 @@
 import numpy as np
 import torch
 
-def optimize(agent,replay_buffer,optimizer,batch_size,n_steps,gamma,device):
 
-    batchs,info_buffer = replay_buffer.n_step_sample(batch_size,n_steps,gamma) # sample random transitions in replay buffer
+def optimize(agent,replay_buffer,optimizer,batch_size,n_steps,gamma,beta,device):
+
+    batchs,info_buffer = replay_buffer.n_step_sample(batch_size,n_steps,gamma,beta) # sample random transitions in replay buffer
     indices = info_buffer['index']
     weights = torch.FloatTensor(
-                info_buffer["_weight"].reshape(-1, 1)
+                info_buffer['_weight'].reshape(-1, 1)
             ).to(device)
     # create batch of states, new_states, rewards ,actions
     new_states = batchs.next_state.to(device)
