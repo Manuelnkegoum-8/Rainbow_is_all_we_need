@@ -108,7 +108,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             # for Qbert sometimes we stay in lives == 0 condition for a few
             # frames so it's important to keep lives > 0, so that we only reset
             # once the environment advertises done.
-            done = True
+            terminated = True
         self.lives = lives
         return obs, reward,  terminated, truncated , info
 
