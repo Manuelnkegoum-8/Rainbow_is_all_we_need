@@ -50,8 +50,8 @@ python -m trainers.trainer --game SpaceInvadersNoFrameskip-v4 --steps 5e6 --memo
 ```
 
 ## Results 📊
-[![Pacman](./some_tests/Rainbow_MsPacmanNoFrameskip-v4.gif)]
-[![Spaceinv](./some_tests/Rainbow_SpaceInvadersNoFrameskip-v4.gif)]
+![Pacman](./some_tests/Rainbow_MsPacmanNoFrameskip-v4.gif)
+![Spaceinvaders](./some_tests/Rainbow_SpaceInvadersNoFrameskip-v4.gif)
 
 
 ## Acknowledgements  🙏 
