@@ -12,7 +12,7 @@ def prep_observation_for_qnet(tensor):
     tensor = tensor.cuda().permute(0,1,4,2,3)
     # .cuda() needs to be before this ^ so that the tensor is made contiguous on the gpu
     tensor = tensor.reshape((tensor.shape[0], tensor.shape[1]*tensor.shape[2], *tensor.shape[3:]))
-    return tensor.to(dtype= torch.float16) / 255 # modify to 16 to use mixed precision
+    return tensor.to(dtype= torch.float32) / 255 # modify to 16 to use mixed precision
 
 
 class PrioritizedReplayBuffer:

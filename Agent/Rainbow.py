@@ -2,7 +2,6 @@ import torch
 from torch import nn
 import torch.nn.init as init
 import numpy as np
-from torch.cuda.amp import GradScaler, autocast
 import random,math
 import torch.nn.functional as F
 from .Noisy import NoisyLayer
@@ -96,7 +95,6 @@ class RainbowAgent:
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(),
                                  lr=6.25e-5,
                                  eps=1.5e-4)
-        self.scaler =  GradScaler(enabled=True)
     def compute_loss(self,states,actions,new_states,rewards,dones):
         batch_size = states.size(0)
         delta_z = (self.v_max - self.v_min) / (self.atom_size - 1)
@@ -166,15 +164,11 @@ class RainbowAgent:
         rewards = rewards.unsqueeze(-1)
         dones = dones.unsqueeze(-1)
         self.optimizer.zero_grad()
-        with autocast(enabled=True):
-            elementwise_loss = self.compute_loss(states,actions,new_states,rewards,dones)
-            loss = torch.mean(elementwise_loss*weights)
+        elementwise_loss = self.compute_loss(states,actions,new_states,rewards,dones)
+        loss = torch.mean(elementwise_loss*weights)
+        loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        self.replay_buffer.update_priority(indices, loss_for_prior) #updtae priorities
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
+        self.optimizer.step()
 
-            loss_for_prior = elementwise_loss.detach().cpu().numpy()
-            self.replay_buffer.update_priority(indices, loss_for_prior) #updtae priorities
-            self.scaler.scale(loss).backward()
-
-            self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
