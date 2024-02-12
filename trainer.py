@@ -1,15 +1,15 @@
 import torch
 import argparse
 from colorama import Fore, Style
-from wrapper import wrap_deepmind,make_atari
+from common.wrapper import wrap_deepmind,make_atari
 from tqdm import trange
 from collections import deque
 import numpy as np
 import random,math,time
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
-from utils.PrioritizedReplaybuffer import PrioritizedReplayBuffer
 import gymnasium as gym
+from common.buffer import PrioritizedReplayBuffer
 from Agents.Rainbow import RainbowAgent
 from Agents.Rainbow2 import RainbowAgent2
 rainbow_colors = [Fore.RED, Fore.YELLOW, Fore.GREEN, Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser(description='Rainbow')
 parser.add_argument('--seed', type=int, default=123, help='Random seed')
 parser.add_argument('--disable-cuda', action='store_true', help='Disable CUDA')
 parser.add_argument('--game', type=str, default='SpaceInvadersNoFrameskip-v4', help='ATARI game use no Frame skip version!!')
-parser.add_argument('--steps', type=int, default=int(5e6), metavar='STEPS', help='Number of training steps (4x number of frames)')
+parser.add_argument('--steps', type=int, default=int(5e7), metavar='STEPS', help='Number of training steps (4x number of frames)')
 parser.add_argument('--max_episode_length', type=int, default=int(108e3), metavar='LENGTH', help='Max episode length (0 to disable)')
 parser.add_argument('--hidden_size', type=int, default=512, metavar='SIZE', help='Network hidden size')
 parser.add_argument('--atoms', type=int, default=51, metavar='C', help='Discretised size of value distribution')

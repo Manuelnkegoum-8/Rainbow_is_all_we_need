@@ -10,7 +10,7 @@ class NoisyLayer(nn.Module):
     """
     def __init__(self,in_features,out_features):
         super(NoisyLayer,self).__init__()
-        self.std_init = 0.5
+        self.std_init = 0.1
         self.in_features = in_features
         self.out_features = out_features
         self.weight_mu = nn.Parameter(torch.empty(out_features, in_features))
