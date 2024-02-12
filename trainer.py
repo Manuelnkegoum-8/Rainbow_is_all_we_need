@@ -10,8 +10,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
 import gymnasium as gym
 from common.buffer import PrioritizedReplayBuffer
-from Agents.Rainbow import RainbowAgent
-from Agents.Rainbow2 import RainbowAgent2
+from Agent.Rainbow import RainbowAgent
+from Agent.Rainbow2 import RainbowAgent2
 rainbow_colors = [Fore.RED, Fore.YELLOW, Fore.GREEN, Fore.CYAN, Fore.BLUE, Fore.MAGENTA]
 
 def printf(text='='*80):
