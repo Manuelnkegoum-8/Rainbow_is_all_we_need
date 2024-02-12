@@ -146,7 +146,6 @@ class RainbowAgent:
     
     def select_action(self,state):
         with torch.no_grad():
-            with autocast(enabled=True):
                 state = prep_observation_for_qnet(torch.Tensor(state).unsqueeze(0))
                 q_values = self.policy_net(state)
                 acts = torch.sum(q_values * self.support, dim=2).argmax(dim=1)[0]
