@@ -46,7 +46,7 @@ To get started with this project, follow these steps to install the necessary de
     - To run the training module with custom configurations, use the following command format. This example sets the game to "SpaceInvadersNoFrameskip-v4," the number of steps to 5 million, and the memory capacity to 100,000.
 
 ```
-python -m trainers.trainer --game SpaceInvadersNoFrameskip-v4 --steps 5e6 --memory_capacity 1e5
+python  trainer.py --game SpaceInvaders --steps 5e6 --memory_capacity 1e5
 ```
 
 ## Results 📊
