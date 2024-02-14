@@ -2,6 +2,7 @@
 
 colorama==0.4.6
 gymnasium[atari, accept-rom-license,other]
+lz4
 numpy==1.26.3
 opencv-python==4.9.0.80
 torch==2.1.2

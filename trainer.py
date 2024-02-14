@@ -24,14 +24,14 @@ def printf(text='='*80):
 parser = argparse.ArgumentParser(description='Rainbow')
 parser.add_argument('--seed', type=int, default=123, help='Random seed')
 parser.add_argument('--disable-cuda', action='store_true', help='Disable CUDA')
-parser.add_argument('--game', type=str, default='SpaceInvadersNoFrameskip-v4', help='ATARI game use no Frame skip version!!')
+parser.add_argument('--game', type=str, default='SpaceInvaders', help='ATARI game use')
 parser.add_argument('--steps', type=int, default=int(5e7), metavar='STEPS', help='Number of training steps (4x number of frames)')
 parser.add_argument('--max_episode_length', type=int, default=int(108e3), metavar='LENGTH', help='Max episode length (0 to disable)')
 parser.add_argument('--hidden_size', type=int, default=512, metavar='SIZE', help='Network hidden size')
 parser.add_argument('--atoms', type=int, default=51, metavar='C', help='Discretised size of value distribution')
 parser.add_argument('--V_min', type=float, default=-10, metavar='V', help='Minimum of value distribution support')
 parser.add_argument('--V_max', type=float, default=10, metavar='V', help='Maximum of value distribution support')
-parser.add_argument('--memory_capacity', type=int, default=int(1e5), metavar='CAPACITY', help='Experience replay memory capacity')
+parser.add_argument('--memory_capacity', type=int, default=int(1e6), metavar='CAPACITY', help='Experience replay memory capacity')
 parser.add_argument('--train_frequency', type=int, default=4, metavar='k', help='Frequency of sampling from memory')
 parser.add_argument('--priority_exponent', type=float, default=0.5, metavar='ω', help='Prioritised experience replay exponent (originally denoted α)')
 parser.add_argument('--priority_weight', type=float, default=0.4, metavar='β', help='Initial prioritised experience replay importance sampling weight')
@@ -62,7 +62,7 @@ if torch.cuda.is_available() and not args.disable_cuda:
 else:
   args.device = torch.device('cpu')
 
-envname = args.game
+envname = args.game+"NoFrameskip-v4"
 Max_steps_done = args.steps
 min_samples = args.min_samples
 train_freq = args.train_frequency

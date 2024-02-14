@@ -2,7 +2,6 @@ import torch
 from torch import nn
 import torch.nn.init as init
 import numpy as np
-from torch.cuda.amp import GradScaler, autocast
 import random,math
 import torch.nn.functional as F
 from .Noisy import NoisyLayer
@@ -89,7 +88,7 @@ class RainbowAgent2:
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(),
                                  lr=6.25e-5,
                                  eps=1.5e-4)
-        self.scaler =  GradScaler(enabled=True)
+
     
     @torch.no_grad
     def compute_tdtarget(self,new_states,rewards,dones):
@@ -111,7 +110,6 @@ class RainbowAgent2:
     def select_action(self,state):
         self.policy_net.eval()
         with torch.no_grad():
-            with autocast(enabled=True):
                 state = prep_observation_for_qnet(torch.Tensor(state).unsqueeze(0))
                 q_values = self.policy_net(state)
                 acts = torch.argmax(q_values,dim=1)[0]
@@ -129,18 +127,14 @@ class RainbowAgent2:
         rewards = rewards.unsqueeze(-1)
         dones = dones.unsqueeze(-1)
         self.optimizer.zero_grad()
-        with autocast(enabled=True):
-            q_values = self.policy_net(states) # (bs,num_actions)
-            # we want to select the value according to the specified actions
-            inputs = torch.gather(q_values,dim=1,index=actions.unsqueeze(-1)) # select among rows so dim = 1
-            td_targets = self.compute_tdtarget(new_states,rewards,dones)
-            elementwise_loss = self.criterion(td_targets,inputs)
-            loss = torch.mean(elementwise_loss*weights)
-            loss_for_prior = (inputs-td_targets).abs().detach().cpu().numpy()
-            self.replay_buffer.update_priority(indices, loss_for_prior) #updtae priorities
-            self.scaler.scale(loss).backward()
-
-            self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
+        q_values = self.policy_net(states) # (bs,num_actions)
+        # we want to select the value according to the specified actions
+        inputs = torch.gather(q_values,dim=1,index=actions.unsqueeze(-1)) # select among rows so dim = 1
+        td_targets = self.compute_tdtarget(new_states,rewards,dones)
+        elementwise_loss = self.criterion(td_targets,inputs)
+        loss = torch.mean(elementwise_loss*weights)
+        loss_for_prior = (inputs-td_targets).abs().detach().cpu().numpy()
+        self.replay_buffer.update_priority(indices, loss_for_prior) #updtae priorities
+        loss.backward()
+	torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
+        self.optimizer.step()
