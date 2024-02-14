@@ -52,7 +52,7 @@ python  trainer.py --game SpaceInvaders --steps 5e6 --memory_capacity 1e5
 ## Results 📊
 ![Pacman](./some_tests/Rainbow_MsPacmanNoFrameskip-v4.gif)
 ![Spaceinvaders](./some_tests/Rainbow_SpaceInvadersNoFrameskip-v4.gif)
-
+![Phoenix](./some_tests/Rainbow_PhoenixNoFrameskip-v4.gif)
 
 ## Acknowledgements  🙏 
 
