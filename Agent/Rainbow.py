@@ -75,7 +75,7 @@ class RainbowAgent:
             self.policy_net.load_state_dict(torch.load(weights,map_location='cpu'))
     
         self.target_net = BaseNetwork(env,hidden,atom_size,v_min,v_max)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.update()
 
         self.policy_net = self.policy_net.to(device)
         self.target_net = self.target_net.to(device)
@@ -138,11 +138,7 @@ class RainbowAgent:
         return loss
 
     def update(self):
-        target_net_state_dict = self.target_net.state_dict()
-        policy_net_state_dict = self.policy_net.state_dict()
-        for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
-        self.target_net.load_state_dict(target_net_state_dict)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
     
     def select_action(self,state):
         with torch.no_grad():
