@@ -3,7 +3,6 @@
 [![numpy version](https://img.shields.io/badge/numpy-1.26.3-red.svg)](https://pypi.org/project/numpy/1.26.3/)
 [![opencv-python version](https://img.shields.io/badge/opencv--python-4.9.0.80-green.svg)](https://pypi.org/project/opencv-python/4.9.0.80/)
 [![torch version](https://img.shields.io/badge/torch-2.1.2-orange.svg)](https://pypi.org/project/torch/2.1.2/)
-[![torchrl version](https://img.shields.io/badge/torchrl-0.2.1-yellow.svg)](https://pypi.org/project/torchrl/0.2.1/)
 
 ## Description
 This project implements the Rainbow Deep Reinforcement Learning (DRL) algorithm, a state-of-the-art technique that combines several advancements in the field of reinforcement learning to achieve superior performance in a wide range of environments. Rainbow integrates multiple key innovations, including Double Q-learning, prioritized experience replay, dueling network architectures, multi-step learning, distributional reinforcement learning, and noisy nets, into a single, cohesive agent.
@@ -52,9 +51,9 @@ python  trainer.py --game SpaceInvaders --steps 5e6 --memory_capacity 1e5
 ## Results 📊
 ![Pacman](./some_tests/Rainbow_MsPacmanNoFrameskip-v4.gif)
 ![Spaceinvaders](./some_tests/Rainbow_SpaceInvadersNoFrameskip-v4.gif)
-![Phoenix](./some_tests/Rainbow_PongNoFrameskip-v4.gif)
+![Pong](./some_tests/Rainbow_PongNoFrameskip-v4.gif)
 ![Phoenix](./some_tests/Rainbow_PhoenixNoFrameskip-v4.gif)
-
+![Breakout](./some_tests/Rainbow_BreakoutNoFrameskip-v4.gif)
 ## Acknowledgements  🙏 
 
 - Thanks to the creators of the Rainbow algorithm and all the researchers whose work contributed to this powerful approach to deep reinforcement learning.
