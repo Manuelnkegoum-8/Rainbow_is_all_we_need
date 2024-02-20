@@ -69,7 +69,7 @@ class RainbowAgent2:
             self.policy_net.load_state_dict(torch.load(weights,map_location='cpu'))
     
         self.target_net = BaseNetwork(env,hidden)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.update()
 
         self.policy_net = self.policy_net.to(device)
         self.target_net = self.target_net.to(device)
@@ -88,24 +88,20 @@ class RainbowAgent2:
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(),
                                  lr=6.25e-5,
                                  eps=1.5e-4)
-
     
-    @torch.no_grad
+
     def compute_tdtarget(self,new_states,rewards,dones):
-        self.target_net.reset_noise()
-        tmp = self.policy_net(new_states)
-        max_idx = tmp.argmax(dim=1,keepdim=True)
-        targets_values = self.target_net(new_states) # (bs,num_actions)
-        max_targets_values = torch.gather(targets_values,dim=1,index=max_idx)
+        with torch.no_grad():
+            self.target_net.reset_noise()
+            tmp = self.policy_net(new_states)
+            max_idx = tmp.argmax(dim=1,keepdim=True)
+            targets_values = self.target_net(new_states) # (bs,num_actions)
+            max_targets_values = torch.gather(targets_values,dim=1,index=max_idx)
         targets = rewards + (1-dones)*max_targets_values*(self.gamma**self.n_steps)   
         return targets
 
     def update(self):
-        target_net_state_dict = self.target_net.state_dict()
-        policy_net_state_dict = self.policy_net.state_dict()
-        for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
-        self.target_net.load_state_dict(target_net_state_dict)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
     
     def select_action(self,state):
         self.policy_net.eval()
@@ -136,5 +132,5 @@ class RainbowAgent2:
         loss_for_prior = (inputs-td_targets).abs().detach().cpu().numpy()
         self.replay_buffer.update_priority(indices, loss_for_prior) #updtae priorities
         loss.backward()
-	torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(),10)
         self.optimizer.step()
