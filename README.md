@@ -61,8 +61,8 @@ python  trainer.py --game SpaceInvaders --steps 5e6 --memory_capacity 1e5
 - This project uses [OpenAI Gym](https://gym.openai.com/) for the environment simulations.
 
 ## Authors  🧑‍💻
-- Victor Hoffmann 
-- Manuel Nkegoum
+- Victor Hoffmann : [VictorHoffmann1](https://github.com/VictorHoffmann1)
+- Manuel Nkegoum : [Manuelnkegoum-8](https://github.com/Manuelnkegoum-8/)
 
 
 

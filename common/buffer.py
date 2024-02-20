@@ -17,7 +17,6 @@ def prep_observation_for_qnet(tensor):
 
 class PrioritizedReplayBuffer:
     """ based on https://nn.labml.ai/rl/dqn, supports n-step bootstrapping and parallel environments,
-    removed alpha hyperparameter like google/dopamine
     """
 
     def __init__(self, eps: float, size: int, gamma: float, n_steps: int, alpha : float):
